@@ -19,10 +19,22 @@ git config --global user.email 'xxxxx'
 
 ## 分支
 
-- `git branch`：查看所有分支
-- `git branch xxx`：创建新分支
-- `git checkout xxx`：切换分支
-- `git checkout -b xxx`：创建并切换分支
+一个分支代表一条独立的开发线，使用分支可以从主线上分离，在不影响主线的同时继续工作
+
+- `git branch` 
+  - `git branch`：列出所有分支（本地）
+  - `git branch -r`：列出所有分支（远程）
+  - `git branch -a`：列出所有分支（本地 + 远程）
+  - `git branch xxx`：创建新分支
+  - `git branch xxx hash`：创建一个指向指定 commit 的分支
+  - `git branch -d xxx`：删除分支
+
+
+- `git checkout` 
+  - `git checkout xxx`：切换分支
+  - `git checkout -b xxx`：新建分支并切换
+
+执行 `git checkout .` 或者 `git checkout -- <file>` 命令时，会用暂存区全部或指定的文件替换工作区的文件。这个操作很危险，会清除工作区中未添加到暂存区中的改动。
 
 ### 分支合并
 
@@ -54,13 +66,31 @@ HEAD 默认指向某个分支，而不是某个提交记录，而分支默认指
 
 ### 分离 HEAD
 
-分离 HEAD 就是让 HEAD 指向某个提交记录，通过 checkout 某个提交记录的 hash 值即可让 HEAD 指向该提交记录
+分离 HEAD 就是让 HEAD 指向某个提交记录，而不再是某个分支，即**工作在没有分支的状态下** 
+
+通过 checkout 某个提交记录的 hash 即可让 HEAD 指向该提交记录
 
 ```shell
 git checkout hash
 ```
 
-Git 中的 hash 基于 SHA-1 共有四十位，Git 对 hash 的处理很智能。你只需要提供能够唯一标识提交记录的前几个字符即可
+处于分离 HEAD 状态时不跟任何分支挂钩，如果执行 commit 之后切换回具体的分支，这些提交都会消失
+
+**找回提交**
+
+例如 Hash 为 `2fb7fe2` 开头，通过 `git chekout 2fb7fe2` 可以返回刚才分离 HEAD 并提交的状态
+
+```shell
+git checkout 2fb7fe2
+```
+
+**创建新分支**
+
+通过 `git branch branch-name hash` 能够将刚才分离HEAD 并提交的状态创建一个新分支
+
+```shell
+git branch new 2fb7fe2
+```
 
 ### 相对引用
 
@@ -87,6 +117,12 @@ git branch -f main hash
 git branch -f main HEAD^
 ```
 
+## 提交
+
+- `git commit -m message`：提交暂存区到仓库
+- `git commit [file1] [file2] ... -m message`：提交暂存区的指定文件到仓库
+- 
+
 ## 撤销变更
 
 `git reset` 通过把分支记录回退几个提交记录来实现撤销改动，这样之后原来指向的提交记录就跟从来没有提交过一样
@@ -109,7 +145,16 @@ git revert HEAD
 
 **和 reset 不同的是后面不是要移动到的位置，而是需要撤销的提交，这样就会新建一个新的提交和需要撤销的提交的父提交相同**
 
+
+
+- 当执行 **git reset HEAD** 命令时，暂存区的目录树会被重写，被 master 分支指向的目录树所替换，但是工作区不受影响。
+- 当执行 `git rm --cached <file>` 命令时，会直接从暂存区删除文件，工作区则不做出改变。
+- 当执行 `git checkout .** 或者 **git checkout -- <file>` 命令时，会用暂存区全部或指定的文件替换工作区的文件。这个操作很危险，会清除工作区中未添加到暂存区中的改动。
+- 当执行 `**git checkout HEAD .** 或者 **git checkout HEAD <file>` 命令时，会用 HEAD 指向的 master 分支中的全部或者部分文件替换暂存区和以及工作区中的文件。这个命令也是极具危险性的，因为不但会清除工作区中未提交的改动，也会清除暂存区中未提交的改动。
+
 ## 远程
+
+### 拉取
 
 `git fetch` 完成了仅有的但是很重要的两步:
 
@@ -132,9 +177,33 @@ Git 提供了一个专门的命令 `git pull` 来完成这两个操作，实际�
 
 `git pull --rebase` 就是 fetch 和 rebase 的简写
 
-**上传变更**
+```shell
+git pull [remote] [branch]
+```
 
-`git push` 负责将**你的**变更上传到指定的远程仓库，并在远程仓库上合并你的新提交记录，同时远程分支 `origin/xxx` 也同样被更新
+### 推送
+
+`git push` 用于从将本地的分支版本上传到远程并合并，同时远程分支 `origin/xxx` 也同样被更新
+
+```shell
+git push <remote name> <本地分支名>:<远程分支名>
+
+# 如果本地分支名与远程分支名相同，可以省略重复的分支名
+git push <remote name> <branch name>
+```
+
+如果本地版本与远程版本有差异，但又要强制推送可以使用 `--force` 参数：
+
+```shell
+git push --force origin master
+```
+
+使用 `--delete` 参数删除远程仓库的分支
+
+```shell
+# 删除远程 origin 仓库的 master 分支
+git push origin --delete master
+```
 
 `git push` 不带任何参数时的行为与 Git 的一个名为 `push.default` 的配置有关
 
@@ -163,11 +232,21 @@ stash@{2}: WIP on master: 21d80a5 added number to log
 
 `git stash pop` 可以应用栈顶贮藏然后立即从栈上扔掉它
 
-## 重命名
+## 暂存区修改
 
-```shell
-git mv xx xxx
-```
+- `git add`
+  - `git add [file1] [file2] ...`：添加指定文件到暂存区（仅包括新文件和修改）
+  - `git add [dir]`：添加指定目录到暂存区（仅包括新文件和修改）
+  - `git add .`：添加当前目录所有文件到暂存区（仅包括新文件和修改）
+  - `git add -A`：提交所有变化（ -A == --all ）
+  - `git add -u`：提交被修改和被删除的文件
+  - `git add -p`
+    - 依次询问是否添加每个变化
+    - 对于同一个文件的多处变化，可以实现分次提交
+- `git rm` 
+  - `git rm [file1] [file2] ...`：删除文件
+  - `git rm --cached [file]`：停止追踪文件（文件保留在工作区）
+- `git mv [file-original] [file-renamed]`：修改文件名
 
 ## 版本查看
 
@@ -177,5 +256,28 @@ git log --online 	# 简介的方式
 git log -nx		 	# 最近x次提交
 git log --all 	 	# 所有分支
 git log --graph     # 版本的演进 ui比较好
+```
+
+## 标签
+
+使用 `git tag` 可以给最新的一次提交打上标签，表明达到一个重要的阶段
+
+tag 就是一个让人容易记住的有意义的名字，它跟某个commit 绑在一起
+
+```shell
+# 创建标签
+git tag v1.0 
+
+# 查看已有标签
+git tag
+
+# 删除标签
+git tag -d v1.1
+
+# 追加标签
+git tag v0.9 85fc7e7
+
+# 查看该版本修改的内容
+git show v1.0
 ```
 

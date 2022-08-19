@@ -28,7 +28,7 @@ $ ./main.js  # /Users/xiefeng/.nvm/versions/node/v14.17.6/bin/node ./main.js
 #! /usr/bin/env python3
 ```
 
-`env` 是一个可以查看当前所有的环境变量的命令，其位置为 /usr/bin/env，由于 PATH 中通常都包含 /usr/bin，所以可以在 shell 中直接执行 `env` 
+`env` 是一个可以查看当前所有的环境变量的命令，其位置为 `/usr/bin/env`，由于 PATH 中通常都包含 /usr/bin，所以可以在 shell 中直接执行 `env` 
 
 ```shell
 ➜ ~ env
